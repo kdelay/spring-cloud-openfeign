@@ -54,23 +54,20 @@ public class PathVariableParameterProcessor implements AnnotatedParameterProcess
 		context.setParameterName(name);
 
 		MethodMetadata data = context.getMethodMetadata();
-		String varName = '{' + name + '}';
 		String varNameRegex = ".*\\{" + name + "(:[^}]+)?\\}.*";
-		if (!data.template().url().matches(varNameRegex) && !containsMapValues(data.template().queries(), varName)
-				&& !containsMapValues(data.template().headers(), varName)) {
+		if (!data.template().url().matches(varNameRegex) && !matchesMapValues(data.template().queries(), varNameRegex)
+				&& !matchesMapValues(data.template().headers(), varNameRegex)) {
 			data.formParams().add(name);
 		}
 		return true;
 	}
 
-	private <K, V> boolean containsMapValues(Map<K, Collection<V>> map, V search) {
-		Collection<Collection<V>> values = map.values();
-		if (values == null) {
-			return false;
-		}
-		for (Collection<V> entry : values) {
-			if (entry.contains(search)) {
-				return true;
+	private boolean matchesMapValues(Map<String, Collection<String>> map, String regex) {
+		for (Collection<String> entry : map.values()) {
+			for (String value : entry) {
+				if (value.matches(regex)) {
+					return true;
+				}
 			}
 		}
 		return false;
